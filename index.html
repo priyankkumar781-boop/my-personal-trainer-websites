@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Fitness Plan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .step-container {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .step-container.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #ffffff;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); /* Tailwind pink-500 */
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(236, 72, 153, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div id="app-container" class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 tracking-tight">Your Custom Fitness Plan</h1>
+            <p class="mt-2 text-lg text-gray-500">Let's build a plan that works for you.</p>
+        </div>
+
+        <!-- Message Box -->
+        <div id="message-box" class="hidden mb-6 p-4 rounded-xl text-center text-sm font-medium transition-all duration-300"></div>
+
+        <!-- Step 1: Tell Us About You -->
+        <div id="step-1" class="step-container active flex-col items-center">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Tell Us About You</h2>
+            <div class="w-full max-w-md">
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" id="name" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="phone" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500" pattern="[0-9]{10}" placeholder="e.g., 1234567890">
+                </div>
+                <div class="mb-6">
+                    <label for="email-step1" class="block text-sm font-medium text-gray-700">Email ID</label>
+                    <input type="email" id="email-step1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., example@domain.com">
+                </div>
+                <button id="submit-initial-details-btn" onclick="handleInitialDetails()" class="w-full px-6 py-3 text-base font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                    Continue <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Get Your Free Custom Plan -->
+        <div id="step-2" class="step-container flex-col items-center text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Get Your Free Custom Plan</h2>
+            <p class="text-lg text-gray-600 mb-8">Just a few steps away from a personalized fitness and diet plan designed just for you.</p>
+            <button onclick="nextStep(2, 3)" class="w-full max-w-sm px-8 py-4 text-lg font-semibold rounded-2xl shadow-lg text-white bg-pink-500 hover:bg-pink-600 button-pulse transition-colors duration-200">
+                Start Building Your Plan 💪
+            </button>
+        </div>
+
+        <!-- Step 3: Personal Details -->
+        <div id="step-3" class="step-container flex-col items-center">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Tell Us More About Yourself</h2>
+            <div class="w-full max-w-md space-y-4">
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select...</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="age" class="block text-sm font-medium text-gray-700">Age</label>
+                    <input type="number" id="age" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="height" class="block text-sm font-medium text-gray-700">Height (cm)</label>
+                    <input type="number" id="height" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="weight" class="block text-sm font-medium text-gray-700">Weight (kg)</label>
+                    <input type="number" id="weight" min="1" class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <button onclick="nextStep(3, 4)" class="mt-8 w-full max-w-xs px-6 py-3 text-base font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Step 4: Primary Objective -->
+        <div id="step-4" class="step-container flex-col items-center">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">What is Your Primary Objective?</h2>
+            <div class="w-full max-w-lg space-y-4">
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="objective" value="Lose Fat" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Lose Fat</span>
+                </label>
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="objective" value="Build Muscle" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Build Muscle</span>
+                </label>
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="objective" value="Improve Stamina" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Improve Stamina</span>
+                </label>
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="objective" value="General Fitness" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">General Fitness</span>
+                </label>
+            </div>
+            <button onclick="nextStep(4, 5)" class="mt-8 w-full max-w-xs px-6 py-3 text-base font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Step 5: Dietary Preferences -->
+        <div id="step-5" class="step-container flex-col items-center">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Dietary Preferences</h2>
+            <div class="w-full max-w-lg space-y-4">
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="diet" value="Vegetarian" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Vegetarian</span>
+                </label>
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="diet" value="Eggetarian" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Eggetarian</span>
+                </label>
+                <label class="flex items-center space-x-3 px-6 py-4 bg-gray-50 rounded-xl shadow-sm cursor-pointer hover:bg-gray-100 transition-colors duration-200">
+                    <input type="radio" name="diet" value="Non-Vegetarian" class="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500">
+                    <span class="text-base font-medium text-gray-700">Non-Vegetarian</span>
+                </label>
+            </div>
+            <button onclick="nextStep(5, 6)" class="mt-8 w-full max-w-xs px-6 py-3 text-base font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                Next <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Step 6: Gym Equipment Access -->
+        <div id="step-6" class="step-container flex-col">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Gym Equipment Access</h2>
+            <p class="text-sm text-gray-500 mb-4">Select all the equipment you have access to.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+                <!-- Chest -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-dumbbell mr-2 text-red-500"></i> Chest</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Flat Bench Press" class="rounded text-blue-600 mr-2"> Flat Bench Press</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Incline Bench Press" class="rounded text-blue-600 mr-2"> Incline Bench Press</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Decline Bench Press" class="rounded text-blue-600 mr-2"> Decline Bench Press</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Chest Press Machine" class="rounded text-blue-600 mr-2"> Chest Press Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Cable Crossover Machine" class="rounded text-blue-600 mr-2"> Cable Crossover Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Pec Deck (Butterfly) Machine" class="rounded text-blue-600 mr-2"> Pec Deck (Butterfly) Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Smith Machine Bench Press" class="rounded text-blue-600 mr-2"> Smith Machine Bench Press</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Hammer Strength Chest Press" class="rounded text-blue-600 mr-2"> Hammer Strength Chest Press</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Dumbbells (Chest)" class="rounded text-blue-600 mr-2"> Dumbbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="chest[]" value="Barbell (Chest)" class="rounded text-blue-600 mr-2"> Barbell</label>
+                    </div>
+                </div>
+                <!-- Back -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-running mr-2 text-blue-500"></i> Back</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Pulley" class="rounded text-blue-600 mr-2"> Pulley</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Lat Pulldown Machine" class="rounded text-blue-600 mr-2"> Lat Pulldown Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Seated Row Machine" class="rounded text-blue-600 mr-2"> Seated Row Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Chest-Supported Row Machine" class="rounded text-blue-600 mr-2"> Chest-Supported Row Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Back Extension Machine" class="rounded text-blue-600 mr-2"> Back Extension Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Assisted Pull-up Machine" class="rounded text-blue-600 mr-2"> Assisted Pull-up Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="T-Bar Row Machine" class="rounded text-blue-600 mr-2"> T-Bar Row Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Barbells (Back)" class="rounded text-blue-600 mr-2"> Barbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="back[]" value="Dumbbells (Back)" class="rounded text-blue-600 mr-2"> Dumbbells</label>
+                    </div>
+                </div>
+                <!-- Shoulders -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-hand-rock mr-2 text-yellow-500"></i> Shoulders</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Seated Shoulder Press Machine" class="rounded text-blue-600 mr-2"> Seated Shoulder Press Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Lateral Raise Machine" class="rounded text-blue-600 mr-2"> Lateral Raise Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Rear Delt (Pec Fly) Machine" class="rounded text-blue-600 mr-2"> Rear Delt (Pec Fly) Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Smith Machine" class="rounded text-blue-600 mr-2"> Smith Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Cable Functional Trainer" class="rounded text-blue-600 mr-2"> Cable Functional Trainer</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Viking Press Machine" class="rounded text-blue-600 mr-2"> Viking Press Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Dumbbells (Shoulders)" class="rounded text-blue-600 mr-2"> Dumbbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="shoulders[]" value="Barbells (Shoulders)" class="rounded text-blue-600 mr-2"> Barbells</label>
+                    </div>
+                </div>
+                <!-- Arms -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-biceps mr-2 text-green-500"></i> Arms</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Preacher Curl Bench" class="rounded text-blue-600 mr-2"> Preacher Curl Bench</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Bicep Curl Machine" class="rounded text-blue-600 mr-2"> Bicep Curl Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Cable Machine / Functional Trainer" class="rounded text-blue-600 mr-2"> Cable Machine / Functional Trainer</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Arm Blaster" class="rounded text-blue-600 mr-2"> Arm Blaster</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Triceps Pushdown Station (cable machine)" class="rounded text-blue-600 mr-2"> Triceps Pushdown Station</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Dipping Bars/Station" class="rounded text-blue-600 mr-2"> Dipping Bars/Station</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Triceps Extension Machine" class="rounded text-blue-600 mr-2"> Triceps Extension Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Seated Triceps Dip Machine" class="rounded text-blue-600 mr-2"> Seated Triceps Dip Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Dumbbells (Arms)" class="rounded text-blue-600 mr-2"> Dumbbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Barbells (Arms)" class="rounded text-blue-600 mr-2"> Barbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="arms[]" value="Ez-Curl Bars" class="rounded text-blue-600 mr-2"> Ez-Curl Bars</label>
+                    </div>
+                </div>
+                <!-- Legs -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-shoe-prints mr-2 text-orange-500"></i> Legs</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Squat Rack / Power Rack" class="rounded text-blue-600 mr-2"> Squat Rack / Power Rack</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Smith Machine (Legs)" class="rounded text-blue-600 mr-2"> Smith Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Leg Press Machine" class="rounded text-blue-600 mr-2"> Leg Press Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Hack Squat Machine" class="rounded text-blue-600 mr-2"> Hack Squat Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Leg Extension Machine" class="rounded text-blue-600 mr-2"> Leg Extension Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Lying / Seated Leg Curl Machine" class="rounded text-blue-600 mr-2"> Lying / Seated Leg Curl Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Glute Kickback / Glute Drive Machine" class="rounded text-blue-600 mr-2"> Glute Kickback / Glute Drive Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Adductor / Abductor Machine" class="rounded text-blue-600 mr-2"> Adductor / Abductor Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Seated Calf Raise Machine" class="rounded text-blue-600 mr-2"> Seated Calf Raise Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Standing Calf Raise Machine" class="rounded text-blue-600 mr-2"> Standing Calf Raise Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Barbells (Legs)" class="rounded text-blue-600 mr-2"> Barbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Dumbbells (Legs)" class="rounded text-blue-600 mr-2"> Dumbbells</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Kettlebell" class="rounded text-blue-600 mr-2"> Kettlebell</label>
+                        <label class="flex items-center"><input type="checkbox" name="legs[]" value="Plyometric Boxes" class="rounded text-blue-600 mr-2"> Plyometric Boxes</label>
+                    </div>
+                </div>
+                <!-- Core -->
+                <div class="bg-gray-50 rounded-xl p-4 shadow-sm">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3"><i class="fas fa-compress-arrows-alt mr-2 text-purple-500"></i> Core</h3>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Abdominal Crunch Machine" class="rounded text-blue-600 mr-2"> Abdominal Crunch Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Torso Rotation Machine" class="rounded text-blue-600 mr-2"> Torso Rotation Machine</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Captains Chair / Vertical Knee Raise Station" class="rounded text-blue-600 mr-2"> Captains Chair / Vertical Knee Raise Station</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Ab Coaster" class="rounded text-blue-600 mr-2"> Ab Coaster</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Sit-up Bench" class="rounded text-blue-600 mr-2"> Sit-up Bench</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Cable Machine / Functional Trainer (Core)" class="rounded text-blue-600 mr-2"> Cable Machine / Functional Trainer</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Roman Chair / Hyperextension Bench" class="rounded text-blue-600 mr-2"> Roman Chair / Hyperextension Bench</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="GHD" class="rounded text-blue-600 mr-2"> GHD</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Ab Roller / Ab Wheel" class="rounded text-blue-600 mr-2"> Ab Roller / Ab Wheel</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Medicine Balls" class="rounded text-blue-600 mr-2"> Medicine Balls</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Stability Balls" class="rounded text-blue-600 mr-2"> Stability Balls</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Bosu Balls" class="rounded text-blue-600 mr-2"> Bosu Balls</label>
+                        <label class="flex items-center"><input type="checkbox" name="core[]" value="Pull-up Bar" class="rounded text-blue-600 mr-2"> Pull-up Bar</label>
+                    </div>
+                </div>
+            </div>
+            <button onclick="nextStep(6, 7)" class="mt-8 w-full max-w-xs px-6 py-3 text-base font-medium rounded-xl shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                Generate Plan <i class="fas fa-brain ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Step 7: PDF and Thank You -->
+        <div id="step-7" class="step-container flex-col items-center text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Your Plan is Ready! 🎉</h2>
+            <p class="text-lg text-gray-600 mb-8">Thank you for providing your information. Click the buttons below to download your personalized fitness and diet plans.</p>
+            
+            <div id="loading-spinner" class="hidden my-4">
+                <div class="spinner"></div>
+                <p class="mt-2 text-gray-600 font-medium">Generating your personalized plans with AI... this may take a moment!</p>
+            </div>
+
+            <div id="button-container" class="space-y-4 md:space-y-0 md:flex md:gap-4">
+                <button id="download-exercise-btn" onclick="generateExercisePDF()" class="w-full md:w-auto px-8 py-4 text-lg font-semibold rounded-2xl shadow-lg text-white bg-green-600 hover:bg-green-700 transition-colors duration-200">
+                    <i class="fas fa-download mr-2"></i> Download Exercise Plan PDF
+                </button>
+                <button id="download-diet-btn" onclick="generateDietPDF()" class="w-full md:w-auto px-8 py-4 text-lg font-semibold rounded-2xl shadow-lg text-white bg-red-600 hover:bg-red-700 transition-colors duration-200">
+                    <i class="fas fa-utensils mr-2"></i> Download Diet Plan PDF
+                </button>
+                <button onclick="playGreeting()" class="w-full md:w-auto px-8 py-4 text-lg font-semibold rounded-2xl shadow-lg text-white bg-purple-600 hover:bg-purple-700 transition-colors duration-200">
+                    <i class="fas fa-volume-up mr-2"></i> Listen to Your Plan ✨
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxhNE_bJacn-3-hoWUodsrhem24ivG2ekS4YnGbToRrGhWPQ6GehbO_KXz2XaX3oA45bQ/exec';
+
+        const state = {
+            step: 1,
+            personalDetails: {},
+            objective: null,
+            diet: null,
+            equipment: {},
+            generatedPlan: null,
+        };
+
+        const showMessage = (message, type) => {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = message;
+            msgBox.classList.remove('hidden', 'bg-red-200', 'text-red-800', 'bg-green-200', 'text-green-800');
+            if (type === 'error') {
+                msgBox.classList.add('bg-red-200', 'text-red-800');
+            } else {
+                msgBox.classList.add('bg-green-200', 'text-green-800');
+            }
+            setTimeout(() => {
+                msgBox.classList.add('hidden');
+            }, 3000);
+        };
+
+        const setPlanningState = (isLoading) => {
+            const spinner = document.getElementById('loading-spinner');
+            const buttonContainer = document.getElementById('button-container');
+            const downloadExerciseBtn = document.getElementById('download-exercise-btn');
+            const downloadDietBtn = document.getElementById('download-diet-btn');
+            
+            if (isLoading) {
+                spinner.classList.remove('hidden');
+                buttonContainer.classList.add('hidden');
+                downloadExerciseBtn.disabled = true;
+                downloadDietBtn.disabled = true;
+            } else {
+                spinner.classList.add('hidden');
+                buttonContainer.classList.remove('hidden');
+                downloadExerciseBtn.disabled = false;
+                downloadDietBtn.disabled = false;
+            }
+        };
+
+        const handleInitialDetails = async () => {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email-step1').value.trim();
+
+            if (!name || !phone || !email) {
+                showMessage('Please fill out all initial personal details.', 'error');
+                return;
+            }
+            if (!/^[0-9]{10}$/.test(phone)) {
+                 showMessage('Please enter a valid 10-digit phone number.', 'error');
+                 return;
+            }
+            if (!/\S+@\S+\.\S+/.test(email)) {
+                showMessage('Please enter a valid email address.', 'error');
+                return;
+            }
+
+            state.personalDetails.name = name;
+            state.personalDetails.phone = phone;
+            state.personalDetails.email = email;
+            
+            console.log("Attempting to send data to Google Sheet...");
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        email: email
+                    })
+                });
+                
+                console.log("Request sent. Due to 'no-cors' mode, assuming success. Please check your Google Sheet for new data.");
+                
+                showMessage('Initial details saved and sent to spreadsheet! Proceeding...', 'success');
+                nextStep(1, 2);
+
+            } catch (error) {
+                console.error("Network or other error sending data to Google Sheet:", error);
+                showMessage('Failed to save initial details. Please try again.', 'error');
+            }
+        };
+
+
+        const nextStep = (currentStep, next) => {
+            let isValid = true;
+
+            if (currentStep === 1) {
+                if (!state.personalDetails.name || !state.personalDetails.phone || !state.personalDetails.email) {
+                    isValid = false;
+                }
+            } else if (currentStep === 3) {
+                const gender = document.getElementById('gender').value;
+                const age = document.getElementById('age').value;
+                const height = document.getElementById('height').value;
+                const weight = document.getElementById('weight').value;
+                if (!gender || !age || !height || !weight) {
+                    showMessage('Please fill out all personal details.', 'error');
+                    isValid = false;
+                } else if (parseInt(age) <= 0 || parseInt(height) <= 0 || parseInt(weight) <= 0) {
+                    showMessage('Age, height, and weight must be positive numbers.', 'error');
+                    isValid = false;
+                }
+                else {
+                    state.personalDetails.gender = gender;
+                    state.personalDetails.age = age;
+                    state.personalDetails.height = height;
+                    state.personalDetails.weight = weight;
+                }
+            } else if (currentStep === 4) {
+                const selectedObjective = document.querySelector('input[name="objective"]:checked');
+                if (!selectedObjective) {
+                    showMessage('Please select your primary objective.', 'error');
+                    isValid = false;
+                } else {
+                    state.objective = selectedObjective.value;
+                }
+            } else if (currentStep === 5) {
+                const selectedDiet = document.querySelector('input[name="diet"]:checked');
+                if (!selectedDiet) {
+                    showMessage('Please select your dietary preference.', 'error');
+                    isValid = false;
+                } else {
+                    state.diet = selectedDiet.value;
+                }
+            } else if (currentStep === 6) {
+                const equipment = {};
+                ['chest', 'back', 'shoulders', 'arms', 'legs', 'core'].forEach(bodyPart => {
+                    const checkboxes = document.querySelectorAll(`input[name="${bodyPart}[]"]:checked`);
+                    equipment[bodyPart] = Array.from(checkboxes).map(cb => cb.value);
+                });
+                state.equipment = equipment;
+            }
+
+            if (isValid) {
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${next}`).classList.add('active');
+                state.step = next;
+
+                if (next === 7) {
+                    if (!state.generatedPlan) {
+                         generateGeminiPlan();
+                    } else {
+                        setPlanningState(false);
+                    }
+                }
+            }
+        };
+
+        const generateGeminiPlan = async () => {
+            setPlanningState(true);
+            const geminiApiKey = "YOUR_GEMINI_API_KEY_HERE"; // <<< IMPORTANT: PASTE YOUR API KEY HERE
+
+            const prompt = `Generate a personalized fitness plan.
+            User Details:
+            - Name: ${state.personalDetails.name}
+            - Phone: ${state.personalDetails.phone}
+            - Email: ${state.personalDetails.email}
+            - Age: ${state.personalDetails.age}
+            - Gender: ${state.personalDetails.gender}
+            - Height: ${state.personalDetails.height} cm
+            - Weight: ${state.personalDetails.weight} kg
+            - Primary Objective: ${state.objective}
+            - Dietary Preference: ${state.diet}
+            - Available Equipment: ${JSON.stringify(state.equipment)}
+
+            Provide a week-long workout plan with a focus on a **single body part per day** and a maximum of 4 exercises per day for that body part. Each day should specify exercises (only using the available equipment if provided), sets, and reps.
+            Also, provide a daily Indian diet plan. The "dietPlan" should be a single object with keys for "breakfast", "lunch", "dinner", and "snack", each with a detailed description including the dish name and a brief, easy-to-follow Indian recipe (2-3 sentences max). Ensure the plan is safe and effective for the user's objective and dietary preference.
+            Make the entire response a single JSON object.
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "workoutPlan": {
+                                "type": "ARRAY",
+                                "items": {
+                                    "type": "OBJECT",
+                                    "properties": {
+                                        "day": { "type": "STRING" },
+                                        "routine": { "type": "STRING" }
+                                    }
+                                }
+                            },
+                            "dietPlan": {
+                                "type": "OBJECT",
+                                "properties": {
+                                    "breakfast": { "type": "STRING" },
+                                    "lunch": { "type": "STRING" },
+                                    "dinner": { "type": "STRING" },
+                                    "snack": { "type": "STRING" }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiApiKey}`;
+
+            try {
+                let backoff = 1000;
+                let response;
+                for (let i = 0; i < 5; i++) {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.status !== 429) {
+                        break;
+                    }
+                    console.warn(`API call failed with status 429. Retrying in ${backoff}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, backoff));
+                    backoff *= 2;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status} - ${await response.text()}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                state.generatedPlan = JSON.parse(jsonText);
+                setPlanningState(false);
+                showMessage('Plans generated successfully! You can now download them.', 'success');
+
+            } catch (error) {
+                console.error("Error generating plan:", error);
+                setPlanningState(false);
+                showMessage('Failed to generate plan. Please try again. Check console for details.', 'error');
+            }
+        };
+
+        const playGreeting = async () => {
+            const geminiApiKey = "AIzaSyBZaJ6jrqyhDGdZfHLgJUMxzf5z1CtF5nE"; // <<< IMPORTANT: PASTE YOUR API KEY HERE
+            const greeting = `Hello ${state.personalDetails.name}! Based on your selections, your custom fitness plan is ready to download. Let's get started on your journey!`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: greeting }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Kore" }
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${geminiApiKey}`;
+
+            try {
+                let backoff = 1000;
+                let response;
+                for (let i = 0; i < 5; i++) {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.status !== 429) {
+                        break;
+                    }
+                    console.warn(`TTS API call failed with status 429. Retrying in ${backoff}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, backoff));
+                    backoff *= 2;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`TTS API call failed with status: ${response.status} - ${await response.text()}`);
+                }
+
+                const result = await response.json();
+                const audioData = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+                const mimeType = result?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    const audio = new Audio(audioUrl);
+                    audio.play();
+                } else {
+                    showMessage('Failed to get audio data.', 'error');
+                }
+            } catch (error) {
+                console.error("Error with TTS API:", error);
+                showMessage('Failed to generate audio. Please try again.', 'error');
+            }
+        };
+
+        const base64ToArrayBuffer = (base64) => {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        };
+
+        const pcmToWav = (pcmData, sampleRate) => {
+            const numChannels = 1;
+            const bytesPerSample = 2;
+            const dataLength = pcmData.length * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+
+            let offset = 0;
+            const writeString = (str) => {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(offset + i, str.charCodeAt(i));
+                }
+                offset += str.length;
+            };
+            const writeUint32 = (val) => {
+                view.setUint32(offset, val, true);
+                offset += 4;
+            };
+            const writeUint16 = (val) => {
+                view.setUint16(offset, val, true);
+                offset += 2;
+            };
+
+            writeString("RIFF");
+            writeUint32(36 + dataLength);
+            writeString("WAVE");
+            writeString("fmt ");
+            writeUint32(16);
+            writeUint16(1);
+            writeUint16(numChannels);
+            writeUint32(sampleRate);
+            writeUint32(sampleRate * numChannels * bytesPerSample);
+            writeUint16(numChannels * bytesPerSample);
+            writeUint16(8 * bytesPerSample);
+            writeString("data");
+            writeUint32(dataLength);
+
+            for (let i = 0; i < pcmData.length; i++) {
+                view.setInt16(offset, pcmData[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        };
+
+        const initializePdfDoc = (title) => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(22);
+            doc.text(title, 105, 20, null, null, "center");
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 30, null, null, "center");
+            return doc;
+        };
+
+        const addSectionTitle = (doc, title, yOffsetRef) => {
+            yOffsetRef.value += 10;
+            doc.setFontSize(16);
+            doc.setTextColor(30, 41, 59);
+            doc.text(title, 20, yOffsetRef.value);
+            yOffsetRef.value += 5;
+        };
+
+        const addSectionText = (doc, text, yOffsetRef) => {
+            doc.setFontSize(12);
+            doc.setTextColor(100, 116, 139);
+            const splitText = doc.splitTextToSize(text, 170);
+            doc.text(splitText, 20, yOffsetRef.value);
+            yOffsetRef.value += splitText.length * 5;
+            if (yOffsetRef.value > 270) {
+                 doc.addPage();
+                 yOffsetRef.value = 20;
+                 return true;
+            }
+            return false;
+        };
+
+        const generateExercisePDF = () => {
+            if (!state.generatedPlan) {
+                showMessage('Please wait for the plan to be generated first.', 'error');
+                return;
+            }
+
+            const doc = initializePdfDoc("Your Personalized Exercise Plan");
+            let yOffset = { value: 45 };
+
+            addSectionTitle(doc, "Personal Details", yOffset);
+            addSectionText(doc, `Name: ${state.personalDetails.name}`, yOffset);
+            addSectionText(doc, `Phone: ${state.personalDetails.phone}`, yOffset);
+            addSectionText(doc, `Email: ${state.personalDetails.email}`, yOffset);
+            addSectionText(doc, `Age: ${state.personalDetails.age}`, yOffset);
+            addSectionText(doc, `Gender: ${state.personalDetails.gender}`, yOffset);
+            addSectionText(doc, `Height: ${state.personalDetails.height} cm`, yOffset);
+            addSectionText(doc, `Weight: ${state.personalDetails.weight} kg`, yOffset);
+            
+            addSectionTitle(doc, "Your Primary Objective", yOffset);
+            addSectionText(doc, `${state.objective}`, yOffset);
+
+            addSectionTitle(doc, "Available Equipment", yOffset);
+            const equipmentTable = Object.entries(state.equipment)
+                .filter(([_, items]) => items.length > 0)
+                .map(([bodyPart, items]) => [`${bodyPart.charAt(0).toUpperCase() + bodyPart.slice(1)}:`, items.join(', ')]);
+            
+            if (equipmentTable.length > 0) {
+                doc.autoTable({
+                    startY: yOffset.value + 5,
+                    head: [['Category', 'Equipment']],
+                    body: equipmentTable,
+                    theme: 'striped',
+                    styles: { fontSize: 10, cellPadding: 2 },
+                    headStyles: { fillColor: [52, 73, 94] },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    didDrawPage: (data) => {
+                        yOffset.value = data.cursor.y;
+                    }
+                });
+            } else {
+                addSectionText(doc, "No specific equipment selected, plan adapted for bodyweight or common gym access.", yOffset);
+            }
+            
+            yOffset.value = doc.autoTable.previous.finalY || yOffset.value;
+
+            addSectionTitle(doc, "Workout Plan", yOffset);
+            state.generatedPlan.workoutPlan.forEach(day => {
+                let pageAdded = addSectionText(doc, `\n**${day.day}**:`, yOffset);
+                if (pageAdded) { addSectionTitle(doc, "Workout Plan (continued)", yOffset); }
+                addSectionText(doc, day.routine, yOffset);
+            });
+            
+            doc.addPage();
+            yOffset.value = 20;
+            addSectionTitle(doc, "Important Notes", yOffset);
+            addSectionText(doc, "Always consult with a healthcare professional or certified personal trainer before starting any new exercise program.", yOffset);
+            addSectionText(doc, "Listen to your body, and don't push yourself beyond your limits.", yOffset);
+            addSectionText(doc, "Remember to warm up before and cool down after your workouts.", yOffset);
+            
+            addSectionTitle(doc, "Thank You!", yOffset);
+            addSectionText(doc, "Thank you for using our service. We hope this exercise plan helps you on your fitness journey. Consistency is key!", yOffset);
+            
+            doc.save("my-exercise-plan.pdf");
+        };
+
+        const generateDietPDF = () => {
+            if (!state.generatedPlan) {
+                showMessage('Please wait for the plan to be generated first.', 'error');
+                return;
+            }
+
+            const doc = initializePdfDoc("Your Personalized Indian Diet Plan");
+            let yOffset = { value: 45 };
+
+            addSectionTitle(doc, "Personal Details", yOffset);
+            addSectionText(doc, `Name: ${state.personalDetails.name}`, yOffset);
+            addSectionText(doc, `Phone: ${state.personalDetails.phone}`, yOffset);
+            addSectionText(doc, `Email: ${state.personalDetails.email}`, yOffset);
+            addSectionText(doc, `Age: ${state.personalDetails.age}`, yOffset);
+            addSectionText(doc, `Gender: ${state.personalDetails.gender}`, yOffset);
+            addSectionText(doc, `Height: ${state.personalDetails.height} cm`, yOffset);
+            addSectionText(doc, `Weight: ${state.personalDetails.weight} kg`, yOffset);
+            
+            addSectionTitle(doc, "Your Goals & Preferences", yOffset);
+            addSectionText(doc, `Primary Objective: ${state.objective}`, yOffset);
+            addSectionText(doc, `Dietary Preference: ${state.diet}`, yOffset);
+
+            addSectionTitle(doc, "Indian Diet Plan", yOffset);
+            addSectionText(doc, "Here is a sample daily Indian meal plan with easy recipes based on your preferences:", yOffset);
+
+            let pageAdded = addSectionText(doc, `\n**Breakfast**: ${state.generatedPlan.dietPlan.breakfast}`, yOffset);
+            if (pageAdded) { addSectionTitle(doc, "Indian Diet Plan (continued)", yOffset); }
+            
+            pageAdded = addSectionText(doc, `\n**Lunch**: ${state.generatedPlan.dietPlan.lunch}`, yOffset);
+            if (pageAdded) { addSectionTitle(doc, "Indian Diet Plan (continued)", yOffset); }
+
+            pageAdded = addSectionText(doc, `\n**Dinner**: ${state.generatedPlan.dietPlan.dinner}`, yOffset);
+            if (pageAdded) { addSectionTitle(doc, "Indian Diet Plan (continued)", yOffset); }
+
+            pageAdded = addSectionText(doc, `\n**Snack**: ${state.generatedPlan.dietPlan.snack}`, yOffset);
+            if (pageAdded) { addSectionTitle(doc, "Indian Diet Plan (continued)", yOffset); }
+
+            doc.addPage();
+            yOffset.value = 20;
+            addSectionTitle(doc, "Important Dietary Notes", yOffset);
+            addSectionText(doc, "Ensure adequate hydration throughout the day by drinking plenty of water.", yOffset);
+            addSectionText(doc, "Portion sizes may need to be adjusted based on your activity level and specific calorie goals.", yOffset);
+            addSectionText(doc, "Consider consulting a nutritionist for a highly personalized diet plan.", yOffset);
+
+            addSectionTitle(doc, "Thank You!", yOffset);
+            addSectionText(doc, "Thank you for using our service. We hope this diet plan helps you on your health journey. Eat well, live well!", yOffset);
+            
+            doc.save("my-diet-plan.pdf");
+        };
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const step1 = document.getElementById('step-1');
+            step1.classList.add('active');
+        });
+    </script>
+</body>
+</html>
